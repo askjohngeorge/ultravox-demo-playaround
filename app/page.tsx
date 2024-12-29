@@ -11,7 +11,7 @@ import UVLogo from '@/public/UVMark-White.svg';
 import CallStatus from './components/CallStatus';
 import DebugMessages from '@/app/components/DebugMessages';
 import MicToggleButton from './components/MicToggleButton';
-import { PhoneOffIcon } from 'lucide-react';
+import { PhoneOffIcon, PhoneIcon, MicIcon } from 'lucide-react';
 import OrderDetails from './components/OrderDetails';
 
 type SearchParamsProps = {
@@ -125,8 +125,15 @@ export default function Home() {
         onDebugMessage: handleDebugMessage
       }, callConfig, showDebugMessages);
 
-      setIsCallActive(true);
-      handleStatusChange('Call started successfully');
+      if (callType === 'web') {
+        setIsCallActive(true);
+      } else {
+        // For phone calls, just show success message and reset
+        setTimeout(() => {
+          setPhoneNumber('');
+          handleStatusChange('Ready to start a new call');
+        }, 3000);
+      }
     } catch (error) {
       handleStatusChange(`Error starting call: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -166,7 +173,7 @@ export default function Home() {
                         size="md"
                       />
                     </div>
-                    {isCallActive ? (
+                    {isCallActive && callType === 'web' ? (
                       <div className="w-full">
                         <div className="mb-5 relative">
                           <div 
@@ -213,15 +220,29 @@ export default function Home() {
                           {demoConfig.overview}
                         </div>
                         <div className="flex flex-col space-y-4">
-                          <div className="flex space-x-4">
-                            <select
-                              className="bg-gray-700 text-white rounded px-4 py-2"
-                              value={callType}
-                              onChange={(e) => setCallType(e.target.value as CallMediumType)}
+                          <div className="flex items-center space-x-4">
+                            <button
+                              className={`flex items-center space-x-2 px-4 py-2 rounded ${
+                                callType === 'web' 
+                                  ? 'bg-gray-700 text-white' 
+                                  : 'bg-transparent text-gray-400'
+                              }`}
+                              onClick={() => setCallType('web')}
                             >
-                              <option value="web">Web Call</option>
-                              <option value="twilio">Phone Call</option>
-                            </select>
+                              <MicIcon size={18} />
+                              <span>Web</span>
+                            </button>
+                            <button
+                              className={`flex items-center space-x-2 px-4 py-2 rounded ${
+                                callType === 'twilio' 
+                                  ? 'bg-gray-700 text-white' 
+                                  : 'bg-transparent text-gray-400'
+                              }`}
+                              onClick={() => setCallType('twilio')}
+                            >
+                              <PhoneIcon size={18} />
+                              <span>Phone</span>
+                            </button>
 
                             {callType === 'twilio' && (
                               <input

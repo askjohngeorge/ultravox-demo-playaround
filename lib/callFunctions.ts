@@ -63,9 +63,9 @@ async function createCall(callConfig: CallConfig, showDebugMessages?: boolean): 
 export async function startCall(callbacks: CallCallbacks, callConfig: CallConfig, showDebugMessages?: boolean): Promise<void> {
   const callData = await createCall(callConfig, showDebugMessages);
   
-  // For Twilio calls, we don't need to maintain a web session
+  // For Twilio calls, just report success and return
   if (callConfig.medium?.type === 'twilio') {
-    callbacks.onStatusChange('Call started (Twilio)');
+    callbacks.onStatusChange('Phone call initiated successfully');
     return;
   }
 
