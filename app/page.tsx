@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation'; 
 import { startCall, endCall } from '@/lib/callFunctions'
-import { CallConfig, SelectedTool } from '@/lib/types'
+import { CallConfig, SelectedTool, CallMediumType } from '@/lib/types'
 import demoConfig from './demo-config';
 import { Role, Transcript, UltravoxExperimentalMessageEvent, UltravoxSessionStatus } from 'ultravox-client';
 import BorderedImage from '@/app/components/BorderedImage';
@@ -46,6 +46,8 @@ export default function Home() {
   const [callTranscript, setCallTranscript] = useState<Transcript[] | null>([]);
   const [callDebugMessages, setCallDebugMessages] = useState<UltravoxExperimentalMessageEvent[]>([]);
   const [customerProfileKey, setCustomerProfileKey] = useState<string | null>(null);
+  const [callType, setCallType] = useState<CallMediumType>('web');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const transcriptContainerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -97,7 +99,13 @@ export default function Home() {
         voice: demoConfig.callConfig.voice,
         temperature: demoConfig.callConfig.temperature,
         maxDuration: demoConfig.callConfig.maxDuration,
-        timeExceededMessage: demoConfig.callConfig.timeExceededMessage
+        timeExceededMessage: demoConfig.callConfig.timeExceededMessage,
+        medium: callType === 'twilio' ? {
+          type: 'twilio',
+          config: {
+            phoneNumber
+          }
+        } : undefined
       };
 
       const paramOverride: { [key: string]: any } = {
@@ -203,13 +211,43 @@ export default function Home() {
                         <div className="h-[300px] text-gray-400 mb-6 mt-32 lg:mt-0">
                           {demoConfig.overview}
                         </div>
-                        <button
-                          type="button"
-                          className="hover:bg-gray-700 px-6 py-2 border-2 w-full mb-4"
-                          onClick={() => handleStartCallButtonClick(modelOverride, showDebugMessages)}
-                        >
-                          Start Call
-                        </button>
+                        <div className="flex flex-col space-y-4">
+                          <div className="flex space-x-4">
+                            <select
+                              className="bg-gray-700 text-white rounded px-4 py-2"
+                              value={callType}
+                              onChange={(e) => setCallType(e.target.value as CallMediumType)}
+                            >
+                              <option value="web">Web Call</option>
+                              <option value="twilio">Phone Call</option>
+                            </select>
+
+                            {callType === 'twilio' && (
+                              <input
+                                type="tel"
+                                placeholder="Enter phone number (e.g., +1234567890)"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                className="bg-gray-700 text-white rounded px-4 py-2 flex-1"
+                                pattern="^\+[1-9]\d{1,14}$"
+                                title="Please enter phone number in E.164 format (e.g., +1234567890)"
+                              />
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="hover:bg-gray-700 px-6 py-2 border-2 w-full mb-4"
+                            onClick={() => {
+                              if (callType === 'twilio' && !phoneNumber.match(/^\+[1-9]\d{1,14}$/)) {
+                                handleStatusChange('Please enter a valid phone number in E.164 format (e.g., +1234567890)');
+                                return;
+                              }
+                              handleStartCallButtonClick(modelOverride, showDebugMessages);
+                            }}
+                          >
+                            Start {callType === 'twilio' ? 'Phone' : 'Web'} Call
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

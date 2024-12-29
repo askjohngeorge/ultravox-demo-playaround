@@ -113,6 +113,17 @@ interface HttpAuthRequirement {
   scheme: string;
 }
 
+export type CallMediumType = 'web' | 'twilio';
+
+export interface TwilioCallConfig {
+  phoneNumber: string;
+}
+
+export interface CallMedium {
+  type: CallMediumType;
+  config: TwilioCallConfig | null;
+}
+
 export interface CallConfig {
   systemPrompt: string;
   model?: string;
@@ -124,6 +135,7 @@ export interface CallConfig {
   maxDuration?: string;
   timeExceededMessage?: string;
   callKey?: string;
+  medium?: CallMedium;
 }
 
 export interface DemoConfig {
