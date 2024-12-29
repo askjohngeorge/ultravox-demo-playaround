@@ -1,6 +1,6 @@
-# Ultravox Demo Template (Vercel)
+# My Play Around with Ultravox Demo Template (Vercel)
 
-This is a template for building demos using Ultravox, deployed on Vercel. It supports both web-based and phone-based interactions using Twilio.
+This is my personal play around with the Ultravox demo template, forked from https://github.com/fixie-ai/ultravox-demo-template-vercel. It supports both web-based and phone-based interactions using Twilio.
 
 ## Features
 
