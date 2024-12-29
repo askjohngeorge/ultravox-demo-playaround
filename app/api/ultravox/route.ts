@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { CallConfig, CallMediumType } from '@/lib/types';
+import { CallConfig } from '@/lib/types';
 import twilio from 'twilio';
 
 // Initialize Twilio client if credentials are available
@@ -25,6 +25,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Prepare Ultravox configuration
+    const ultravoxConfig = {
+      ...body,
+      firstSpeaker: 'FIRST_SPEAKER_USER',
+      medium: body.medium?.type === 'twilio' ? { twilio: {} } : undefined
+    };
+    console.log('Sending Ultravox config:', JSON.stringify(ultravoxConfig, null, 2));
+
     // Create Ultravox call
     const response = await fetch('https://api.ultravox.ai/api/calls', {
       method: 'POST',
@@ -32,11 +40,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'X-API-Key': `${process.env.ULTRAVOX_API_KEY}`,
       },
-      body: JSON.stringify({
-        ...body,
-        // Set medium to { "twilio": {} } for Twilio calls as per example
-        medium: body.medium?.type === 'twilio' ? { twilio: {} } : undefined
-      }),
+      body: JSON.stringify(ultravoxConfig),
     });
 
     console.log('Ultravox API response status:', response.status);
@@ -48,16 +52,23 @@ export async function POST(request: NextRequest) {
     }
 
     const ultravoxData = await response.json();
+    console.log('Ultravox joinUrl:', ultravoxData.joinUrl);
+    console.log('Full Ultravox response:', JSON.stringify(ultravoxData, null, 2));
 
     // If this is a Twilio call, initiate the outbound call
     if (body.medium?.type === 'twilio' && body.medium.config?.phoneNumber) {
       try {
         console.log('Initiating Twilio call...');
+        
+        const twiml = `<Response><Connect><Stream url="${ultravoxData.joinUrl}"/></Connect></Response>`;
+        console.log('Creating Twilio call with TwiML:', twiml);
+
         const call = await twilioClient!.calls.create({
-          twiml: `<Response><Connect><Stream url="${ultravoxData.joinUrl}"/></Connect></Response>`,
+          twiml,
           to: body.medium.config.phoneNumber,
           from: process.env.TWILIO_PHONE_NUMBER!,
         });
+
         console.log('Twilio call initiated:', call.sid);
         
         return NextResponse.json({

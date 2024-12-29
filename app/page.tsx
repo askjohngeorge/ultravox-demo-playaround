@@ -135,9 +135,10 @@ export default function Home() {
   const handleEndCallButtonClick = async () => {
     try {
       handleStatusChange('Ending call...');
-      await endCall();
+      if (callType === 'web') {
+        await endCall();
+      }
       setIsCallActive(false);
-
       clearCustomerProfile();
       setCustomerProfileKey(null);
       handleStatusChange('Call ended successfully');

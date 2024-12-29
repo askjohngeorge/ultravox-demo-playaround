@@ -62,6 +62,13 @@ async function createCall(callConfig: CallConfig, showDebugMessages?: boolean): 
 
 export async function startCall(callbacks: CallCallbacks, callConfig: CallConfig, showDebugMessages?: boolean): Promise<void> {
   const callData = await createCall(callConfig, showDebugMessages);
+  
+  // For Twilio calls, we don't need to maintain a web session
+  if (callConfig.medium?.type === 'twilio') {
+    callbacks.onStatusChange('Call started (Twilio)');
+    return;
+  }
+
   const joinUrl = callData.joinUrl;
 
   if (!joinUrl && !uvSession) {
@@ -120,5 +127,4 @@ export async function endCall(): Promise<void> {
     const event = new CustomEvent('callEnded');
     window.dispatchEvent(event);
   }
-
 }
